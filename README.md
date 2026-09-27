@@ -1,6 +1,11 @@
 # Qt Updater
 
-Update interface for Qt applications.
+Check for and apply updates to a Qt application, with a dialog that streams the
+update as a subprocess.
+
+The library is a dependency of the host application (`flare`, `openbridge`, ...).
+It checks the host's tagged releases and updates whichever way the host was
+installed.
 
 ## Installation
 
@@ -15,24 +20,65 @@ dependencies = [
 
 ## Usage
 
-Show the update dialog from a Qt application:
+Describe the application and check for a newer release using the UI:
 
 ```python
-from qt_updater import show_update_dialog
+from qt_updater import App, check, show_update_dialog, update, UpdateDialog
 
-show_update_dialog(parent)
+app = App.github(package='openbridge', repository='beatreichenbach/openbridge')
+show_update_dialog(app)
 ```
 
-A standalone runner is also available:
+Or with a custom implementation:
 
-```sh
-python -m qt_updater.updater
+```python
+from qt_updater import update, App, check
+
+app = App.github(package='openbridge', repository='beatreichenbach/openbridge')
+update(app)
+```
+
+## Supported install types
+
+The updater detects how the host was installed from the distribution's PEP 610 `direct_url.json` and `INSTALLER`,
+then updates from the release tag:
+
+| Install                | Update                                                       |
+|------------------------|--------------------------------------------------------------|
+| `git clone` + install  | fetch tags, checkout the release tag, reinstall              |
+| zip download + install | download the release source zip, replace the tree, reinstall |
+| `uv pip / pip`         | `uv pip`/`pip install --upgrade`                             |
+| `uv tool` / `pipx`     | `uv tool upgrade` / `pipx upgrade`                           |
+
+> [!NOTE]
+> For the zip case the provider picks the release's source archive: the first uploaded asset ending in `.zip`,
+> otherwise GitHub's auto-generated source zip.
+> The package manager (`pip` or `uv`) is taken from the installed distribution.
+> Updates always target a tagged release, never a branch tip.
+
+## Custom providers
+
+Only GitHub is supported out of the box.
+To add another host, subclass the `ReleaseProvider` base and pass it to `App`:
+
+```python
+from qt_updater import App, Release, ReleaseProvider
+
+
+class GitLabProvider(ReleaseProvider):
+    def __init__(self, repository: str) -> None:
+        self.repository = repository
+
+    def latest(self) -> Release | None: ...
+
+
+app = App(package='package', provider=GitLabProvider('owner/repository'))
 ```
 
 ## Development
 
 ```sh
-uv venv --python 3.11
+uv venv --python 3.14
 uv pip install -e ".[dev]"
 pre-commit install
 ```
@@ -40,11 +86,17 @@ pre-commit install
 Run the checks:
 
 ```sh
-uv run ruff format qt_updater tests
-uv run ruff check --select I --fix qt_updater tests
-uv run ruff check qt_updater tests
-uv run ty check qt_updater
-uv run pytest
+ruff format qt_updater tests
+ruff check --select I --fix qt_updater tests
+ruff check qt_updater tests
+ty check qt_updater tests
+pytest
+```
+
+The dialog icons in `qt_updater/ui/qt_material_icons` are generated with:
+
+```sh
+uv run qtmaterialicons -o qt_updater/ui --styles outlined --sizes 20 --names check error pending system_update_alt
 ```
 
 ## License
