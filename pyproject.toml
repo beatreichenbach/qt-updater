@@ -1,0 +1,54 @@
+[project]
+name = "qt-updater"
+version = "0.1.0"
+description = "Update interface for Qt applications."
+readme = "README.md"
+license = "GPL-3.0-or-later"
+authors = [
+    { name = "Beat Reichenbach", email = "beatreichenbach@users.noreply.github.com" },
+]
+requires-python = ">=3.11"
+dependencies = [
+    "qtpy>=2.0,<3",
+]
+
+[project.urls]
+Repository = "https://github.com/beatreichenbach/qt-updater"
+
+[project.optional-dependencies]
+dev = [
+    "PySide6>=6.0",
+    "pre-commit>=4.0",
+    "python-semantic-release>=10.0",
+    "pytest>=8.0",
+    "ruff>=0.16",
+    "ty>=0.0.82",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["qt_updater*"]
+
+[tool.setuptools.package-data]
+qt_updater = ["py.typed"]
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+version_variables = ["qt_updater/__init__.py:__version__"]
+allow_zero_version = true
+
+[tool.semantic_release.remote]
+ignore_token_for_push = true
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "ANN", "RUF"]
+
+[tool.pytest.ini_options]
+log_cli = true
+log_level = "INFO"
