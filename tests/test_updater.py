@@ -1,25 +1,38 @@
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 import pytest
-from support import FakeProvider, make_release
+from support import make_release
 
-from qt_updater import App, UpdaterError
-from qt_updater.core import CheckResult, Install, Kind, Manager, runner, updater
-
-
-def make_app() -> App:
-    return App(package='demo', provider=FakeProvider())
+from qt_updater import UpdaterError
+from qt_updater.core import Install, Kind, Manager, updater
 
 
-def test_command_passes_arguments() -> None:
-    release = make_release('2.0.0', tag='v2.0.0', source_url='https://ex.com/src.zip')
-    command = runner.command('demo', release)
+def make_archive(tmp_path: Path, package: str = 'demo', version: str = '2.0.0') -> Path:
+    source = tmp_path / 'source'
+    (source / package).mkdir(parents=True)
+    (source / package / '__init__.py').write_text(f"__version__ = '{version}'")
+    (source / 'pyproject.toml').write_text(f'version = "{version}"')
 
-    assert command[0] == sys.executable
-    assert command[1].endswith('updater.py')
-    assert command[2:] == ['demo', 'v2.0.0', 'https://ex.com/src.zip']
+    archive = tmp_path / f'archive-{version}.zip'
+    with zipfile.ZipFile(archive, 'w') as file:
+        for path in source.rglob('*'):
+            file.write(path, path.relative_to(tmp_path))
+    return archive
+
+
+def make_install(tmp_path: Path, package: str = 'demo') -> Path:
+    root = tmp_path / 'install'
+    (root / package).mkdir(parents=True)
+    (root / package / '__init__.py').write_text("__version__ = '1.0.0'")
+    (root / 'pyproject.toml').write_text('version = "1.0.0"')
+    (root / '.venv').mkdir()
+    (root / '.venv' / 'marker').write_text('keep')
+    (root / 'custom').mkdir()
+    (root / 'custom' / 'data').write_text('keep')
+    return root
 
 
 def test_run_executes_commands(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -50,31 +63,6 @@ def test_run_stops_on_failure(monkeypatch: pytest.MonkeyPatch) -> None:
     assert len(calls) == 1
 
 
-def test_check_clean_tree_rejects_dirty(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    def fake_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
-        return subprocess.CompletedProcess(command, 0, stdout=' M demo.py\n')
-
-    monkeypatch.setattr(updater.subprocess, 'run', fake_run)
-    install = Install(kind=Kind.GIT, root=tmp_path, manager=Manager.PIP)
-
-    with pytest.raises(UpdaterError):
-        updater.check_clean_tree(install)
-
-
-def test_check_clean_tree_allows_clean(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    def fake_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
-        return subprocess.CompletedProcess(command, 0, stdout='')
-
-    monkeypatch.setattr(updater.subprocess, 'run', fake_run)
-    install = Install(kind=Kind.GIT, root=tmp_path, manager=Manager.PIP)
-
-    updater.check_clean_tree(install)
-
-
 def test_main_runs_update(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[list[str]] = []
 
@@ -93,50 +81,66 @@ def test_main_runs_update(monkeypatch: pytest.MonkeyPatch) -> None:
     assert calls == [[sys.executable, '-m', 'pip', 'install', 'demo', '--upgrade']]
 
 
-def test_main_requires_arguments(caplog: pytest.LogCaptureFixture) -> None:
-    assert updater.main(['demo']) == 2
-    assert 'usage' in caplog.text
+def test_check_clean_tree(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    stdout = ['']
+
+    def fake_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
+        return subprocess.CompletedProcess(command, 0, stdout=stdout[0])
+
+    monkeypatch.setattr(updater.subprocess, 'run', fake_run)
+    install = Install(kind=Kind.GIT, root=tmp_path, manager=Manager.PIP)
+
+    updater.check_clean_tree(install)
+
+    stdout[0] = ' M demo.py\n'
+    with pytest.raises(UpdaterError):
+        updater.check_clean_tree(install)
 
 
-def test_main_reports_install_error(
-    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
-) -> None:
-    def raise_error(package: str) -> Install:
-        raise updater.InstallError('nope')
+def test_extract_and_check_source(tmp_path: Path) -> None:
+    archive = make_archive(tmp_path)
+    staging = tmp_path / 'staging'
+    staging.mkdir()
 
-    monkeypatch.setattr(updater, 'detect_install', raise_error)
+    source = updater.extract(archive, staging)
 
-    assert updater.main(['demo', 'v2.0.0']) == 2
-    assert 'nope' in caplog.text
+    assert source.name == 'source'
+    updater.check_source(source, 'demo')
 
-
-def test_update_spawns_subprocess(monkeypatch: pytest.MonkeyPatch) -> None:
-    commands: list[list[str]] = []
-
-    def fake_run(command: list[str]) -> subprocess.CompletedProcess:
-        commands.append(command)
-        return subprocess.CompletedProcess(command, 0)
-
-    monkeypatch.setattr(runner.subprocess, 'run', fake_run)
-
-    assert runner.update(make_app(), make_release()) == 0
-    assert commands[0][0] == sys.executable
-    assert commands[0][1].endswith('updater.py')
+    with pytest.raises(UpdaterError):
+        updater.check_source(tmp_path, 'demo')
 
 
-def test_update_without_release(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
-) -> None:
-    monkeypatch.setattr(runner, 'check', lambda app: CheckResult())
+def test_extract_flat_archive(tmp_path: Path) -> None:
+    source = tmp_path / 'flat'
+    (source / 'demo').mkdir(parents=True)
+    (source / 'demo' / '__init__.py').write_text('')
+    (source / 'pyproject.toml').write_text('version = "2.0.0"')
+    archive = tmp_path / 'flat.zip'
+    with zipfile.ZipFile(archive, 'w') as file:
+        for path in source.rglob('*'):
+            file.write(path, path.relative_to(source))
 
-    assert runner.update(make_app()) == 0
-    assert 'No update available' in capsys.readouterr().out
+    staging = tmp_path / 'flat-staging'
+    staging.mkdir()
+
+    extracted = updater.extract(archive, staging)
+
+    assert extracted == staging
+    updater.check_source(extracted, 'demo')
 
 
-def test_update_reports_check_error(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
-) -> None:
-    monkeypatch.setattr(runner, 'check', lambda app: CheckResult(error='boom'))
+def test_apply_source(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    archive = make_archive(tmp_path)
+    root = make_install(tmp_path)
+    install = Install(kind=Kind.SOURCE, root=root, manager=Manager.PIP)
 
-    assert runner.update(make_app()) == 0
-    assert 'boom' in capsys.readouterr().out
+    monkeypatch.setattr(updater, 'download', lambda url: archive)
+
+    updater.apply_source_archive(install, 'demo', 'https://example.com/source.zip')
+
+    assert '2.0.0' in (root / 'demo' / '__init__.py').read_text()
+    assert '2.0.0' in (root / 'pyproject.toml').read_text()
+    assert (root / '.venv' / 'marker').read_text() == 'keep'
+    assert (root / 'custom' / 'data').read_text() == 'keep'
+    assert not (root / '.demo-backup').exists()

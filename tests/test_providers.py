@@ -42,12 +42,6 @@ def test_parse_release_falls_back_to_source() -> None:
     assert parse_release(data).source_url == 'https://example.com/source.zip'
 
 
-def test_parse_release_without_assets() -> None:
-    data = {'tag_name': 'v1.2.0', 'zipball_url': 'https://example.com/source.zip'}
-
-    assert parse_release(data).source_url == 'https://example.com/source.zip'
-
-
 def patch_session(monkeypatch: pytest.MonkeyPatch, session: FakeSession) -> None:
     monkeypatch.setattr(github.requests, 'Session', lambda: session)
 

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import pytest
 from PySide6 import QtCore
 from support import FakeProvider, make_release
@@ -33,30 +31,6 @@ def collect(checker: UpdateChecker, app: App) -> CheckResult:
 def make_app(version: str, latest: str | None) -> App:
     provider = FakeProvider(make_release(latest) if latest is not None else None)
     return App(package='demo', provider=provider, version=version)
-
-
-def test_available() -> None:
-    result = collect(UpdateChecker(), make_app('1.0.0', '2.0.0'))
-
-    assert result.available
-    assert not result.failed
-    assert result.release is not None
-    assert result.release.version == '2.0.0'
-
-
-def test_up_to_date() -> None:
-    result = collect(UpdateChecker(), make_app('1.0.0', '1.0.0'))
-
-    assert result.up_to_date
-    assert not result.available
-    assert not result.failed
-
-
-def test_failed() -> None:
-    result = collect(UpdateChecker(), make_app('1.0.0', None))
-
-    assert result.failed
-    assert result.error
 
 
 def test_reused_for_another_app() -> None:

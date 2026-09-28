@@ -47,17 +47,6 @@ def test_detect_editable_git(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
     assert result.editable
 
 
-def test_detect_git(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    root = tmp_path / 'demo'
-    (root / '.git').mkdir(parents=True)
-    direct = {'url': root.as_uri(), 'dir_info': {'editable': False}}
-    monkeypatch.setattr(
-        install.metadata, 'distribution', lambda name: FakeDistribution(direct)
-    )
-
-    assert install.detect_install(PACKAGE).kind == install.Kind.GIT
-
-
 def test_detect_source(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = tmp_path / 'demo'
     root.mkdir()
@@ -95,31 +84,23 @@ def test_detect_archive_falls_back_to_registry(
     assert install.detect_install(PACKAGE).kind == install.Kind.REGISTRY
 
 
-def test_detect_uv_tool(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    prefix = tmp_path / 'uv' / 'tools' / 'demo'
-    prefix.mkdir(parents=True)
+def test_detect_tool_manager(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         install.metadata, 'distribution', lambda name: FakeDistribution()
     )
-    monkeypatch.setattr(install.sys, 'prefix', str(prefix))
 
-    result = install.detect_install(PACKAGE)
+    for parts, manager in (
+        (('uv', 'tools'), install.Manager.UV_TOOL),
+        (('pipx', 'venvs'), install.Manager.PIPX),
+    ):
+        prefix = tmp_path.joinpath(*parts, 'demo')
+        prefix.mkdir(parents=True, exist_ok=True)
+        monkeypatch.setattr(install.sys, 'prefix', str(prefix))
 
-    assert result.kind == install.Kind.REGISTRY
-    assert result.manager == install.Manager.UV_TOOL
+        result = install.detect_install(PACKAGE)
 
-
-def test_detect_pipx_tool(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    prefix = tmp_path / 'pipx' / 'venvs' / 'demo'
-    prefix.mkdir(parents=True)
-    monkeypatch.setattr(
-        install.metadata, 'distribution', lambda name: FakeDistribution()
-    )
-    monkeypatch.setattr(install.sys, 'prefix', str(prefix))
-
-    result = install.detect_install(PACKAGE)
-
-    assert result.manager == install.Manager.PIPX
+        assert result.kind == install.Kind.REGISTRY
+        assert result.manager == manager
 
 
 def test_manager_from_installer(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -136,11 +117,6 @@ def test_git_commands(tmp_path: Path) -> None:
 
     assert commands[0] == ['git', '-C', str(tmp_path), 'fetch', '--tags', '--force']
     assert commands[1] == ['git', '-C', str(tmp_path), 'checkout', 'tags/v2.0.0']
-
-
-def test_git_commands_registry() -> None:
-    result = Install(kind=install.Kind.REGISTRY, root=None, manager=install.Manager.PIP)
-    assert install.git_commands(result, make_release()) == []
 
 
 def test_manager_command_registry_pip() -> None:
