@@ -3,10 +3,6 @@
 Check for and apply updates to a Qt application, with a dialog that streams the
 update as a subprocess.
 
-The library is a dependency of the host application (`flare`, `openbridge`, ...).
-It checks the host's tagged releases and updates whichever way the host was
-installed.
-
 ## Installation
 
 Use as a dependency in `pyproject.toml`:
@@ -45,7 +41,7 @@ then updates from the release tag:
 
 | Install                | Update                                                       |
 |------------------------|--------------------------------------------------------------|
-| `git clone` + install  | fetch tags, hard reset to the release tag, reinstall        |
+| `git clone` + install  | fetch tags, hard reset to the release tag, reinstall         |
 | zip download + install | download the release source zip, replace the tree, reinstall |
 | `uv pip / pip`         | `uv pip`/`pip install --upgrade`                             |
 | `uv tool` / `pipx`     | `uv tool upgrade` / `pipx upgrade`                           |
@@ -53,6 +49,7 @@ then updates from the release tag:
 > [!NOTE]
 > For the zip case the provider picks the release's source archive: the first uploaded asset ending in `.zip`,
 > otherwise GitHub's auto-generated source zip.
+>
 > The package manager (`pip` or `uv`) is taken from the installed distribution.
 > Updates always target a tagged release, never a branch tip.
 
