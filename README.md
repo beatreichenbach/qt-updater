@@ -78,7 +78,7 @@ app = App(package='package', provider=GitLabProvider('owner/repository'))
 ## Development
 
 ```sh
-uv venv --python 3.14
+uv venv --python 3.11
 uv pip install -e ".[dev]"
 pre-commit install
 ```
