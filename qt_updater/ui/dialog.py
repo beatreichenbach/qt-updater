@@ -18,6 +18,7 @@ class Stage(enum.Enum):
 class UpdateDialog(QtWidgets.QDialog):
     """
     Dialog to check, prompt, and apply an update.
+
     It emits ``restart_requested`` once an update is successfully installed.
     """
 
@@ -249,16 +250,8 @@ class UpdateDialog(QtWidgets.QDialog):
             self._on_finished(-1)
 
 
-def show_update_dialog(
-    app: App,
-    parent: QtWidgets.QWidget | None = None,
-) -> int:
-    """
-    Show the update dialog and return its result code.
-
-    The dialog accepts only when an update was installed. Cancel, a failed
-    check and being up to date all reject.
-    """
+def show_update_dialog(app: App, parent: QtWidgets.QWidget | None = None) -> int:
+    """Show the update dialog and return its result code."""
 
     dialog = UpdateDialog(app, parent)
     return dialog.exec()
