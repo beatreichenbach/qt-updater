@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 from urllib.request import url2pathname
 
 from .exceptions import InstallError
-from .models import Release
+from .release import Release
 
 
 class Manager(enum.StrEnum):

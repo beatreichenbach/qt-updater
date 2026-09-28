@@ -4,8 +4,8 @@ from typing import Any
 
 import requests
 
-from .. import models
-from . import base
+from ..release import Release
+from .base import ReleaseProvider
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ API = 'https://api.github.com'
 TIMEOUT = 10
 
 
-class GitHubProvider(base.ReleaseProvider):
+class GitHubProvider(ReleaseProvider):
     """
     Read releases from GitHub.
 
@@ -34,12 +34,12 @@ class GitHubProvider(base.ReleaseProvider):
         self.session = requests.Session()
         self.timeout = timeout
 
-    def latest(self) -> models.Release | None:
+    def latest(self) -> Release | None:
         """Return the latest published release."""
 
         return self._get(f'/repos/{self.repository}/releases/latest')
 
-    def _get(self, path: str) -> models.Release | None:
+    def _get(self, path: str) -> Release | None:
         try:
             response = self.session.get(
                 f'{API}{path}', headers=self._headers(), timeout=self.timeout
@@ -58,7 +58,7 @@ class GitHubProvider(base.ReleaseProvider):
         return headers
 
 
-def parse_release(data: dict[str, Any]) -> models.Release:
+def parse_release(data: dict[str, Any]) -> Release:
     """Return a release parsed from a GitHub API response."""
 
     source_url = str(data.get('zipball_url') or '')
@@ -69,4 +69,4 @@ def parse_release(data: dict[str, Any]) -> models.Release:
             break
 
     tag = str(data.get('tag_name') or '')
-    return models.Release(tag=tag, source_url=source_url)
+    return Release(tag=tag, source_url=source_url)

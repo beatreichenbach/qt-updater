@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
-from .. import models
+from ..release import Release
 
 
 class ReleaseProvider(ABC):
     @abstractmethod
-    def latest(self) -> models.Release | None: ...
+    def latest(self) -> Release | None: ...

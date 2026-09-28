@@ -4,8 +4,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+from .app import App
 from .exceptions import UpdaterError
-from .models import App, Release, has_update
+from .release import Release
 
 SCRIPT = Path(__file__).with_name('updater.py')
 
@@ -51,7 +52,7 @@ def check(app: App) -> CheckResult:
         return CheckResult(error=error)
 
     try:
-        newer = has_update(app.version, release.version)
+        newer = release.is_newer_than(app.version)
     except ValueError as failure:
         return CheckResult(error=str(failure))
 

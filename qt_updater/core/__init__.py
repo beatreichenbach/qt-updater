@@ -1,3 +1,4 @@
+from .app import App
 from .exceptions import InstallError, UpdaterError
 from .install import (
     Install,
@@ -9,8 +10,8 @@ from .install import (
     manager_command,
     update_commands,
 )
-from .models import App, Release, current_version, has_update
 from .providers import GitHubProvider, ReleaseProvider
+from .release import Release
 from .runner import CheckResult, check, command, update
 
 __all__ = [
@@ -26,15 +27,12 @@ __all__ = [
     'UpdaterError',
     'check',
     'command',
-    'current_version',
     'detect_install',
     'format_command',
     'git_commands',
-    'has_update',
     'manager_command',
     'update',
     'update_commands',
 ]
 
-# `updater` is deliberately not re-exported. It runs as a standalone script and
-# imports this package by name, so exporting it here would be a circular import.
+# NOTE: The `updater` module is deliberately not re-exported.
