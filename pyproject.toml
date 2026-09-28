@@ -37,7 +37,7 @@ build-backend = "setuptools.build_meta"
 include = ["qt_updater*"]
 
 [tool.setuptools.package-data]
-qt_updater = ["py.typed", "resources/*.py"]
+qt_updater = ["py.typed", "**/resources"]
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
