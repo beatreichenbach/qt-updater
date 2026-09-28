@@ -139,7 +139,7 @@ class UpdateDialog(QtWidgets.QDialog):
             self.status_icon_label.setPixmap(self._pixmap_update)
             self.terminal_text.setVisible(False)
 
-            self.primary_button.setText('Update && Restart')
+            self.primary_button.setText('Update')
             self.secondary_button.setText('Later')
             self.secondary_button.setVisible(True)
             return
