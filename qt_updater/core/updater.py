@@ -55,7 +55,6 @@ def main(arguments: list[str]) -> int:
 def run(install: Install, package: str, release: Release) -> int:
     """Apply an update for an install and return a process exit code."""
 
-    check_clean_tree(install)
     logger.info(f'Updating {package} to {release.version}')
 
     if install.kind == Kind.SOURCE and not install.editable:
@@ -68,36 +67,6 @@ def run(install: Install, package: str, release: Release) -> int:
 
     logger.info('Update complete.')
     return 0
-
-
-def check_clean_tree(install: Install) -> None:
-    """
-    Raise if a git install cannot be updated or has uncommitted changes.
-
-    :raises UpdaterError: if git fails or the working tree is dirty.
-    """
-
-    if install.kind is not Kind.GIT or install.root is None:
-        return
-
-    result = subprocess.run(
-        [
-            'git',
-            '-C',
-            str(install.root),
-            'status',
-            '--porcelain',
-            '--untracked-files=no',
-        ],
-        capture_output=True,
-        text=True,
-        errors='replace',
-    )
-    if result.returncode != 0:
-        detail = result.stderr.strip() or f'exit code {result.returncode}'
-        raise UpdaterError(f'git status failed: {detail}')
-    if result.stdout.strip():
-        raise UpdaterError('the git working tree is not clean')
 
 
 def apply_source_archive(

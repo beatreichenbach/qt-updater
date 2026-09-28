@@ -45,7 +45,7 @@ then updates from the release tag:
 
 | Install                | Update                                                       |
 |------------------------|--------------------------------------------------------------|
-| `git clone` + install  | fetch tags, checkout the release tag, reinstall              |
+| `git clone` + install  | fetch tags, hard reset to the release tag, reinstall        |
 | zip download + install | download the release source zip, replace the tree, reinstall |
 | `uv pip / pip`         | `uv pip`/`pip install --upgrade`                             |
 | `uv tool` / `pipx`     | `uv tool upgrade` / `pipx upgrade`                           |

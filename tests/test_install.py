@@ -116,7 +116,14 @@ def test_git_commands(tmp_path: Path) -> None:
     commands = install.git_commands(result, make_release('2.0.0', tag='v2.0.0'))
 
     assert commands[0] == ['git', '-C', str(tmp_path), 'fetch', '--tags', '--force']
-    assert commands[1] == ['git', '-C', str(tmp_path), 'checkout', 'tags/v2.0.0']
+    assert commands[1] == [
+        'git',
+        '-C',
+        str(tmp_path),
+        'reset',
+        '--hard',
+        'tags/v2.0.0',
+    ]
 
 
 def test_manager_command_registry_pip() -> None:

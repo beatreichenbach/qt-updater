@@ -68,7 +68,7 @@ def update_commands(
 
 
 def git_commands(install: Install, release: Release) -> list[list[str]]:
-    """Return the fetch and checkout commands for a git install."""
+    """Return the fetch and reset commands for a git install."""
 
     if install.kind is not Kind.GIT or install.root is None:
         return []
@@ -77,7 +77,7 @@ def git_commands(install: Install, release: Release) -> list[list[str]]:
 
     return [
         ['git', '-C', str(install.root), 'fetch', '--tags', '--force'],
-        ['git', '-C', str(install.root), 'checkout', f'tags/{release.tag}'],
+        ['git', '-C', str(install.root), 'reset', '--hard', f'tags/{release.tag}'],
     ]
 
 

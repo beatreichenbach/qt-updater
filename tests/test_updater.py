@@ -81,22 +81,6 @@ def test_main_runs_update(monkeypatch: pytest.MonkeyPatch) -> None:
     assert calls == [[sys.executable, '-m', 'pip', 'install', 'demo', '--upgrade']]
 
 
-def test_check_clean_tree(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    stdout = ['']
-
-    def fake_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess:
-        return subprocess.CompletedProcess(command, 0, stdout=stdout[0])
-
-    monkeypatch.setattr(updater.subprocess, 'run', fake_run)
-    install = Install(kind=Kind.GIT, root=tmp_path, manager=Manager.PIP)
-
-    updater.check_clean_tree(install)
-
-    stdout[0] = ' M demo.py\n'
-    with pytest.raises(UpdaterError):
-        updater.check_clean_tree(install)
-
-
 def test_extract_and_check_source(tmp_path: Path) -> None:
     archive = make_archive(tmp_path)
     staging = tmp_path / 'staging'
