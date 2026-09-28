@@ -23,7 +23,7 @@ dependencies = [
 Describe the application and check for a newer release using the UI:
 
 ```python
-from qt_updater import App, check, show_update_dialog, update, UpdateDialog
+from qt_updater import App, show_update_dialog
 
 app = App.github(package='openbridge', repository='beatreichenbach/openbridge')
 show_update_dialog(app)
@@ -32,7 +32,7 @@ show_update_dialog(app)
 Or with a custom implementation:
 
 ```python
-from qt_updater import update, App, check
+from qt_updater import App, update
 
 app = App.github(package='openbridge', repository='beatreichenbach/openbridge')
 update(app)
@@ -86,10 +86,10 @@ pre-commit install
 Run the checks:
 
 ```sh
-ruff format qt_updater tests
-ruff check --select I --fix qt_updater tests
-ruff check qt_updater tests
-ty check qt_updater tests
+ruff format .
+ruff check --select I --fix .
+ruff check .
+ty check
 pytest
 ```
 
