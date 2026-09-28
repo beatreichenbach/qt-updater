@@ -138,7 +138,7 @@ class UpdateDialog(QtWidgets.QDialog):
             self.status_icon_label.setPixmap(self._pixmap_update)
             self.terminal_text.setVisible(False)
 
-            self.primary_button.setText('Update & Restart')
+            self.primary_button.setText('Update && Restart')
             self.secondary_button.setText('Later')
             self.secondary_button.setVisible(True)
             return
@@ -175,6 +175,7 @@ class UpdateDialog(QtWidgets.QDialog):
 
         args = command(self._app.package, self._release)
         self.terminal_text.appendPlainText(format_command(args))
+        self.terminal_text.appendPlainText('\n\n')
         self._process.start(args[0], args[1:])
 
     def _read_output(self) -> None:
@@ -236,7 +237,6 @@ class UpdateDialog(QtWidgets.QDialog):
             self.status_label.setText('Update complete. Restart to finish.')
             self.status_icon_label.setPixmap(self._pixmap_check)
             self.restart_requested.emit()
-            self.accept()
         else:
             self.status_label.setText(f'Update failed with exit code {exit_code}.')
             self.status_icon_label.setPixmap(self._pixmap_error)
