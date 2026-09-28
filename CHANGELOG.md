@@ -2,6 +2,25 @@
 
 <!-- version list -->
 
+## v0.1.1 (2026-09-28)
+
+### Bug Fixes
+
+- Reset to tag
+  ([`a4d8cee`](https://github.com/beatreichenbach/qt-updater/commit/a4d8cee879ee242d25f2a77b12fba8a64b3d279e))
+
+- **ui**: Button, terminal and no close
+  ([`1b30dfe`](https://github.com/beatreichenbach/qt-updater/commit/1b30dfecad32198c8b742a766bd4d1c9564b0770))
+
+- **ui**: Remove restart
+  ([`f9ee737`](https://github.com/beatreichenbach/qt-updater/commit/f9ee737ffcbe8be7e92369f32bfa56c0cfa5f23d))
+
+### Code Style
+
+- Update doc strings
+  ([`937f88e`](https://github.com/beatreichenbach/qt-updater/commit/937f88e1b4e64ce63cb8304e4f506ad44f93610b))
+
+
 ## v0.1.0 (2026-09-28)
 
 - Initial Release
