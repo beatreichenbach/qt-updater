@@ -1,5 +1,10 @@
 # Qt Updater
 
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://github.com/beatreichenbach/qt-updater)
+[![License](https://img.shields.io/github/license/beatreichenbach/qt-updater.svg)](https://github.com/beatreichenbach/qt-updater/blob/main/LICENSE)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![ty](https://img.shields.io/badge/type%20checked-ty-261230.svg)](https://github.com/astral-sh/ty)
+
 Check for and apply updates to a Qt application, with a dialog that streams the
 update as a subprocess.
 
